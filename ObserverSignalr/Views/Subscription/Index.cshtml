@@ -1,0 +1,56 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+    string room = Model;
+}
+
+
+
+<div class="row">
+    <div class="col-12">
+        <input type="text" placeholder="sala" id="room" value="a"/>
+        <input type="text" placeholder="texto" id="text" />
+        <button id="btnSend">Send</button>
+
+    </div>
+    
+    <div class="col-12">
+        <div id="who"></div>
+    </div>
+
+</div>
+
+<script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+
+<script>
+    var connection = new signalR.HubConnectionBuilder().withUrl("/subscriptionHub").build();
+
+    document.getElementById("btnSend").disabled = true;
+
+    // conectamos
+    connection.start().then(function () {
+        document.getElementById("btnSend").disabled = false;
+    }).catch(function (err) {
+        return console.error(err.toString());
+    });
+
+
+    // enviamos mensaje
+    document.getElementById("btnSend").addEventListener("click", function (event) {
+        var room = document.getElementById("room").value;
+        var message = document.getElementById("text").value;
+        connection.invoke("SendMessage", room, message).catch(function (err) {
+            return console.error(err.toString());
+        });
+        document.getElementById("text").value = "";
+        document.getElementById("text").focus();
+        event.preventDefault();
+    });
+
+    // vemos quienes nos stalkean
+    connection.on("ShowWho", function (message) {
+        var message = "<div class='alert alert-light' role='alert'>" + message + "</div>";
+        console.log(message);
+        document.getElementById("who").innerHTML =
+            message + document.getElementById("who").innerHTML;
+    });
+</script>

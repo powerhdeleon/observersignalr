@@ -1,0 +1,51 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="row">
+    <div class="col-6">
+        <input type="text" placeholder="usuario" id="user" />
+        <input type="text" placeholder="texto" id="text" />
+        <button id="btnSend">Send</button>
+
+    </div>
+    <div class="col-6">
+        <div id="messages">
+
+        </div>
+    </div>
+</div>
+
+<script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+
+<script>
+    var connection = new signalR.HubConnectionBuilder().withUrl("/famousHub").build();
+
+    document.getElementById("btnSend").disabled = true;
+
+    // conectamos
+    connection.start().then(function () {
+        document.getElementById("btnSend").disabled = false;
+    }).catch(function (err) {
+        return console.error(err.toString());
+    });
+
+    // recibimos mensaje
+    connection.on("ReceiveMessage", function (user, message) {
+        var message = "<b>"+user + "</b>" + ": " + message;
+        document.getElementById("messages").innerHTML += message + "<br>";
+    });
+
+    
+    // enviamos mensaje
+    document.getElementById("btnSend").addEventListener("click", function (event) {
+        var user = document.getElementById("user").value;
+        var message = document.getElementById("text").value;
+        connection.invoke("SendMessage", user, message).catch(function (err) {
+            return console.error(err.toString());
+        });
+        document.getElementById("text").value = "";
+        document.getElementById("text").focus();
+        event.preventDefault();
+    });
+</script>
